@@ -1,0 +1,112 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>STUDY AREA BASE MAP</title>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    #map { height: 90vh; width: 100%; }
+    .title {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: white;
+      padding: 10px 20px;
+      font-size: 18px;
+      font-weight: bold;
+      z-index: 1000;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.3);
+    }
+    .legend {
+      background: white;
+      padding: 5px 8px;
+      font-size: 10px;
+      line-height: 14px;
+      color: #333;
+      border-radius: 5px;
+      box-shadow: 0 0 3px rgba(0,0,0,0.2);
+      max-width: 180px;
+    }
+    .legend img {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      vertical-align: middle;
+      margin-right: 5px;
+      margin-bottom: 2px;
+    }
+    .legend span {
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+  <div class="title">KIBAHA EASTERN PART BASE MAP</div>
+  <div id="map"></div>
+
+  <script>
+    const map = L.map('map').setView([-6.72, 38.81], 11.5);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+      opacity: 0.2
+    }).addTo(map);
+
+    const wmsBaseURL = "http://localhost:8081/geoserver/kibaha/wms";
+
+    
+    
+    const layers = [
+      { name: "water", label: "Water" },
+      { name: "water1", label: "Water" },
+      { name: "petrol_station", label: "Petrol Stations" },
+      { name: "education important", label: "Schools" },
+      { name: "marketrs", label: "Markets" },
+      { name: "bus stop", label: "Bus Stops" },
+      { name: "hospitals", label: "Hospitals" },
+      { name: "tertiary_roads", label: "Tertiary Roads" },
+      { name: "trunk", label: "Trunk Roads" },
+      { name: "settlements", label: "Settlements" },
+      { name: "builtups", label: "Built-ups" },
+      { name: "vegetation", label: "Vegetation" },
+      { name: "bareland", label: "Bareland" },
+      { name: "study area1", label: "Study Area" }
+    ];
+
+
+
+    const overlays = {};
+
+    layers.forEach(layer => {
+      const wmsLayer = L.tileLayer.wms(wmsBaseURL, {
+        layers: `kibaha:${layer.name}`,
+        format: 'image/png',
+        transparent: true
+      }).addTo(map);
+      overlays[layer.label] = wmsLayer;
+    });
+
+    L.control.layers(null, overlays, { collapsed: false }).addTo(map);
+    L.control.scale({ position: 'bottomleft' }).addTo(map);
+
+    const legend = L.control({ position: 'bottomleft' });
+    legend.onAdd = function () {
+      const div = L.DomUtil.create('div', 'legend');
+      let html = "<span style='font-weight:bold; font-size:11px;'>Legend</span><br>";
+      layers.forEach(layer => {
+        html += `
+          <img src="${wmsBaseURL}?REQUEST=GetLegendGraphic&FORMAT=image/png&LAYER=kibaha:${layer.name}" alt="${layer.label} legend">
+          <span>${layer.label}</span><br>
+        `;
+      });
+      div.innerHTML = html;
+      return div;
+    };
+    legend.addTo(map);
+  </script>
+</body>
+</html>
